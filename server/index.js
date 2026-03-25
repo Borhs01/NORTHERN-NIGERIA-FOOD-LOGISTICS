@@ -35,6 +35,24 @@ app.use('/api/riders', require('./routes/riders'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/locations', require('./routes/locations'));
 
+app.get('/', (req, res) => res.json({ 
+  status: 'ok', 
+  app: 'NorthEats API',
+  version: '1.0.0',
+  endpoints: {
+    health: '/api/health',
+    auth: '/api/auth',
+    vendors: '/api/vendors',
+    items: '/api/items',
+    orders: '/api/orders',
+    payments: '/api/payments',
+    reviews: '/api/reviews',
+    riders: '/api/riders',
+    admin: '/api/admin',
+    locations: '/api/locations'
+  }
+}));
+
 app.get('/api/health', (req, res) => res.json({ status: 'ok', app: 'NorthEats API' }));
 
 io.on('connection', (socket) => {
