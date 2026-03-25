@@ -59,7 +59,8 @@ export default function OrderTrackingPage() {
       }
       
       // Setup socket connection after order is loaded
-      const socket = io('/', { withCredentials: true });
+      const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+      const socket = io(socketUrl, { withCredentials: true });
       socketRef.current = socket;
       socket.emit('join_order', id);
       socket.on('order_status_update', ({ status }: { status: string }) => {

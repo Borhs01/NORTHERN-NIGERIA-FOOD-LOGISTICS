@@ -40,7 +40,8 @@ export default function VendorDashboard() {
         rating: v?.averageRating || 0,
       });
       if (v?._id) {
-        const socket = io('/', { withCredentials: true });
+        const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+        const socket = io(socketUrl, { withCredentials: true });
         socketRef.current = socket;
         socket.emit('join_vendor', v._id);
         socket.on('new_order', (order: Record<string, unknown>) => {
