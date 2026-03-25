@@ -9,7 +9,7 @@ import { Spinner } from '../../../components/shared';
 export default function OrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<Record<string, unknown> | null>(null);
+  const [order, setOrder] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function OrderDetail() {
     const newStatus = prompt(`Set status (${statuses}, cancelled):`);
     if (!newStatus) return;
     await api.patch(`/admin/orders/${id}/status`, { status: newStatus });
-    setOrder((p) => p ? { ...p, orderStatus: newStatus } : p);
+    setOrder((p: any) => p ? { ...p, orderStatus: newStatus } : p);
     toast.success('Status updated');
   };
 
@@ -30,7 +30,7 @@ export default function OrderDetail() {
     try {
       await api.post(`/payments/refund/${id}`);
       toast.success('Refund initiated');
-      setOrder((p) => p ? { ...p, paymentStatus: 'refunded', orderStatus: 'cancelled' } : p);
+      setOrder((p: any) => p ? { ...p, paymentStatus: 'refunded', orderStatus: 'cancelled' } : p);
     } catch { toast.error('Refund failed'); }
   };
 
@@ -96,13 +96,16 @@ export default function OrderDetail() {
             { label: 'Consumer', data: consumer, sub: consumer?.phone as string },
             { label: 'Vendor', data: { name: vendor?.businessName as string }, sub: vendor?.lga as string + ', ' + (vendor?.state as string) },
             ...(rider ? [{ label: 'Rider', data: rider, sub: rider?.phone as string }] : []),
-          ].map((p) => (
-            <div key={p.label} className="bg-white rounded-2xl p-4 shadow-sm">
-              <p className="text-xs text-gray-400 font-semibold uppercase mb-2">{p.label}</p>
-              <p className="font-semibold text-gray-900">{p.data?.name as string}</p>
-              <p className="text-gray-400 text-sm">{p.sub}</p>
-            </div>
-          ))}
+          ].map((p) => {
+            const displayName = ((p.data as any)?.name as string) || 'N/A';
+            return (
+              <div key={p.label} className="bg-white rounded-2xl p-4 shadow-sm">
+                <p className="text-xs text-gray-400 font-semibold uppercase mb-2">{p.label}</p>
+                <p className="font-semibold text-gray-900">{displayName}</p>
+                <p className="text-gray-400 text-sm">{p.sub}</p>
+              </div>
+            );
+          })}
 
           {/* DELIVERY INFO */}
           <div className="bg-white rounded-2xl p-4 shadow-sm">

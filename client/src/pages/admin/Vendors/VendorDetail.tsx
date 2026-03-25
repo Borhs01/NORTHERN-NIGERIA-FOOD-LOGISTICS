@@ -9,9 +9,9 @@ import { Spinner } from '../../../components/shared';
 export default function VendorDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [vendor, setVendor] = useState<Record<string, unknown> | null>(null);
-  const [orders, setOrders] = useState<Record<string, unknown>[]>([]);
-  const [reviews, setReviews] = useState<Record<string, unknown>[]>([]);
+  const [vendor, setVendor] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ export default function VendorDetail() {
 
   const handleApprove = async () => {
     await api.patch(`/admin/vendors/${id}/approve`);
-    setVendor((p) => p ? { ...p, isApproved: true } : p);
+    setVendor((p: any) => p ? { ...p, isApproved: true } : p);
     toast.success('Vendor approved!');
   };
 
@@ -36,13 +36,13 @@ export default function VendorDetail() {
     const reason = prompt('Reason for suspension:');
     if (reason === null) return;
     await api.patch(`/admin/vendors/${id}/suspend`, { reason });
-    setVendor((p) => p ? { ...p, isSuspended: true } : p);
+    setVendor((p: any) => p ? { ...p, isSuspended: true } : p);
     toast.success('Vendor suspended');
   };
 
   const handleUnsuspend = async () => {
     await api.patch(`/admin/vendors/${id}/unsuspend`);
-    setVendor((p) => p ? { ...p, isSuspended: false } : p);
+    setVendor((p: any) => p ? { ...p, isSuspended: false } : p);
     toast.success('Vendor unsuspended');
   };
 
@@ -82,13 +82,13 @@ export default function VendorDetail() {
           </div>
           <div className="grid grid-cols-3 gap-3 mb-4">
             {[
-              { icon: <ShoppingBag className="w-4 h-4" />, label: 'Orders', value: vendor.totalOrders as number || 0 },
-              { icon: <Star className="w-4 h-4" />, label: 'Rating', value: vendor.averageRating as number || '—' },
+              { icon: <ShoppingBag className="w-4 h-4" />, label: 'Orders', value: (vendor.totalOrders as number) || 0 },
+              { icon: <Star className="w-4 h-4" />, label: 'Rating', value: (vendor.averageRating as number) ? `⭐ ${(vendor.averageRating as number)}` : '—' },
               { icon: <DollarSign className="w-4 h-4" />, label: 'Revenue', value: formatNGN((vendor.totalRevenue as number) || 0) },
             ].map((s) => (
               <div key={s.label} className="text-center p-2 bg-gray-50 rounded-xl">
                 <div className="flex justify-center text-orange-500 mb-1">{s.icon}</div>
-                <p className="font-bold text-gray-900 text-sm">{s.value}</p>
+                <p className="font-bold text-gray-900 text-sm">{String(s.value)}</p>
                 <p className="text-gray-400 text-xs">{s.label}</p>
               </div>
             ))}

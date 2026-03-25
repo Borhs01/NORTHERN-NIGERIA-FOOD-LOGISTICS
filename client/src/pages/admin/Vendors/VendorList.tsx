@@ -7,7 +7,7 @@ import { Spinner } from '../../../components/shared';
 
 export default function VendorList() {
   const navigate = useNavigate();
-  const [vendors, setVendors] = useState<Record<string, unknown>[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState('');
@@ -92,8 +92,10 @@ export default function VendorList() {
               <tbody className="divide-y divide-gray-50">
                 {vendors.map((v) => {
                   const user = v.userId as Record<string, unknown>;
-                  const badge = v.isSuspended ? { label: 'Suspended', cls: 'bg-red-100 text-red-700' }
-                    : v.isApproved ? { label: 'Approved', cls: 'bg-green-100 text-green-700' }
+                  const isSuspended = Boolean(v.isSuspended);
+                  const isApproved = Boolean(v.isApproved);
+                  const badge = isSuspended ? { label: 'Suspended', cls: 'bg-red-100 text-red-700' }
+                    : isApproved ? { label: 'Approved', cls: 'bg-green-100 text-green-700' }
                     : { label: 'Pending', cls: 'bg-yellow-100 text-yellow-700' };
                   return (
                     <tr key={v._id as string} className="hover:bg-gray-50 transition cursor-pointer" onClick={() => navigate(`/admin/vendors/${v._id}`)}>

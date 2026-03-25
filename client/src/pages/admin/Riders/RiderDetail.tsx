@@ -9,7 +9,7 @@ import { Spinner } from '../../../components/shared';
 export default function RiderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [rider, setRider] = useState<Record<string, unknown> | null>(null);
+  const [rider, setRider] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,19 +64,19 @@ export default function RiderDetail() {
           </div>
           <div className="flex gap-2">
             {!rider.isApproved && (
-              <button onClick={async () => { await api.patch(`/admin/riders/${id}/approve`); setRider((p) => p ? { ...p, isApproved: true } : p); toast.success('Approved!'); }}
+                <button onClick={async () => { await api.patch(`/admin/riders/${id}/approve`); setRider((p: any) => p ? { ...p, isApproved: true } : p); toast.success('Approved!'); }}
                 className="flex-1 bg-green-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
                 <CheckCircle className="w-4 h-4" /> Approve
               </button>
             )}
             {!rider.isSuspended && (
-              <button onClick={async () => { const r = prompt('Reason:'); if (!r) return; await api.patch(`/admin/riders/${id}/suspend`, { reason: r }); setRider((p) => p ? { ...p, isSuspended: true } : p); toast.success('Suspended'); }}
+              <button onClick={async () => { const r = prompt('Reason:'); if (!r) return; await api.patch(`/admin/riders/${id}/suspend`, { reason: r }); setRider((p: any) => p ? { ...p, isSuspended: true } : p); toast.success('Suspended'); }}
                 className="flex-1 bg-red-100 text-red-600 py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
                 <Pause className="w-4 h-4" /> Suspend
               </button>
             )}
             {rider.isSuspended && (
-              <button onClick={async () => { await api.patch(`/admin/riders/${id}/unsuspend`); setRider((p) => p ? { ...p, isSuspended: false } : p); toast.success('Unsuspended!'); }}
+              <button onClick={async () => { await api.patch(`/admin/riders/${id}/unsuspend`); setRider((p: any) => p ? { ...p, isSuspended: false } : p); toast.success('Unsuspended!'); }}
                 className="flex-1 bg-blue-500 text-white py-2 rounded-xl text-sm font-semibold flex items-center justify-center gap-1">
                 <XCircle className="w-4 h-4" /> Unsuspend
               </button>
@@ -88,10 +88,10 @@ export default function RiderDetail() {
           <h2 className="font-bold text-gray-900 mb-4">Details</h2>
           <div className="space-y-3 text-sm">
             {[
-              { label: 'Vehicle Type', value: (rider.vehicleType as string)?.charAt(0).toUpperCase() + (rider.vehicleType as string)?.slice(1) },
-              { label: 'State', value: (rider.state as string)?.charAt(0).toUpperCase() + (rider.state as string)?.slice(1) },
-              { label: 'LGA', value: rider.lga as string },
-              { label: 'Online Status', value: rider.isOnline ? '🟢 Online' : '⚫ Offline' },
+              { label: 'Vehicle Type', value: ((rider.vehicleType as string)?.charAt(0).toUpperCase() + (rider.vehicleType as string)?.slice(1)) || '—' },
+              { label: 'State', value: ((rider.state as string)?.charAt(0).toUpperCase() + (rider.state as string)?.slice(1)) || '—' },
+              { label: 'LGA', value: (rider.lga as string) || '—' },
+              { label: 'Online Status', value: (rider.isOnline ? '🟢 Online' : '⚫ Offline') },
               { label: 'Avg Rating', value: (rider.averageRating as number) ? `⭐ ${rider.averageRating}` : 'No ratings yet' },
               { label: 'Bank Name', value: (rider.bankName as string) || '—' },
               { label: 'Account Number', value: (rider.accountNumber as string) || '—' },
@@ -99,7 +99,7 @@ export default function RiderDetail() {
             ].map((row) => (
               <div key={row.label} className="flex justify-between">
                 <span className="text-gray-400">{row.label}</span>
-                <span className="font-medium text-gray-800">{row.value}</span>
+                <span className="font-medium text-gray-800">{String(row.value)}</span>
               </div>
             ))}
           </div>

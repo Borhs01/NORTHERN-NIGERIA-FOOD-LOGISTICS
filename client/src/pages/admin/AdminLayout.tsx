@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Store, Bike, Users, ShoppingBag, CreditCard,
-  Star, Tag, Settings, ChefHat, Bell, LogOut, Menu, X, ChevronRight
+  Star, Tag, Settings, ChefHat, Bell, LogOut, Menu, X
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 

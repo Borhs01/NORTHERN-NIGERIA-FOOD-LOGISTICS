@@ -5,7 +5,6 @@ import api from '../../../services/api';
 import { Spinner } from '../../../components/shared';
 
 export default function PlatformSettings() {
-  const [settings, setSettings] = useState<Record<string, unknown> | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [commission, setCommission] = useState('10');
@@ -16,7 +15,6 @@ export default function PlatformSettings() {
 
   useEffect(() => {
     api.get('/admin/settings').then(({ data }) => {
-      setSettings(data);
       setCommission(String(data?.commissionRate || 10));
       setSupportPhone(data?.supportPhone || '');
       setSupportEmail(data?.supportEmail || '');

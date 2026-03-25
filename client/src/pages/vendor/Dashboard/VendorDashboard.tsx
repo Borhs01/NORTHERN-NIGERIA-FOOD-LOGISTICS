@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io, Socket } from 'socket.io-client';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
-import { ChefHat, TrendingUp, Package, DollarSign, Star, Bell, LogOut, Menu as MenuIcon, X, ChevronRight, ToggleLeft, ToggleRight } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { ChefHat, TrendingUp, Package, DollarSign, Star, Bell, LogOut, ChevronRight, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { useAuthStore } from '../../../store/authStore';
@@ -11,9 +11,9 @@ import { Spinner } from '../../../components/shared';
 
 export default function VendorDashboard() {
   const navigate = useNavigate();
-  const { user, logout } = useAuthStore();
-  const [vendor, setVendor] = useState<Record<string, unknown> | null>(null);
-  const [orders, setOrders] = useState<Record<string, unknown>[]>([]);
+  const { logout } = useAuthStore();
+  const [vendor, setVendor] = useState<any>(null);
+  const [orders, setOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, today: 0, revenue: 0, rating: 0 });
   const [loading, setLoading] = useState(true);
   const [newOrders, setNewOrders] = useState<Record<string, unknown>[]>([]);

@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area, Legend
+  LineChart, Line, PieChart, Pie, Cell, AreaChart, Area
 } from 'recharts';
 import {
   ShoppingBag, DollarSign, Store, Bike, Users, AlertCircle,
-  TrendingUp, Clock, ArrowRight, RefreshCw
+  ArrowRight, RefreshCw
 } from 'lucide-react';
 import api from '../../../services/api';
 import { formatNGN, statusColor } from '../../../utils/constants';
@@ -17,7 +17,7 @@ const PIE_COLORS = ['#16A34A', '#F97316', '#EF4444', '#3B82F6', '#8B5CF6'];
 
 export default function AdminOverview() {
   const navigate = useNavigate();
-  const [data, setData] = useState<Record<string, unknown> | null>(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { fetchStats(); }, []);
@@ -138,9 +138,9 @@ export default function AdminOverview() {
           <p className="text-gray-400 text-xs mb-4">Paid orders total (₦)</p>
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={revenueByState}>
-              <XAxis dataKey="state" tick={{ fontSize: 11, fill: '#6b7280', textTransform: 'capitalize' }} axisLine={false} tickLine={false} />
+              <XAxis dataKey="state" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
               <YAxis hide />
-              <Tooltip formatter={(v: number) => formatNGN(v)} contentStyle={{ borderRadius: '12px', border: 'none', fontSize: 12 }} />
+              <Tooltip formatter={(value: any) => formatNGN(Number(value ?? 0))} contentStyle={{ borderRadius: '12px', border: 'none', fontSize: 12 }} />
               <Bar dataKey="revenue" radius={[8, 8, 0, 0]}>
                 {revenueByState.map((_, i) => <Cell key={i} fill={['#F97316', '#16A34A', '#3B82F6'][i % 3]} />)}
               </Bar>
@@ -156,7 +156,7 @@ export default function AdminOverview() {
           <h2 className="font-bold text-gray-900 mb-4">Orders by Status</h2>
           <ResponsiveContainer width="100%" height={180}>
             <PieChart>
-              <Pie data={ordersByStatus} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}
+              <Pie data={ordersByStatus} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, percent }) => `${name} ${(((percent ?? 0) * 100).toFixed(0))}%`} labelLine={false}
                 fontSize={10}>
                 {ordersByStatus.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
               </Pie>

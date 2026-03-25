@@ -10,6 +10,13 @@ interface User {
   state: string;
   profileImage: string;
   profile?: Record<string, unknown>;
+  address?: string;
+  houseNumber?: string;
+  streetName?: string;
+  buildingName?: string;
+  landmark?: string;
+  area?: string;
+  lga?: string;
 }
 
 interface AuthState {

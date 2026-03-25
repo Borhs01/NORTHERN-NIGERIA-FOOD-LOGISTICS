@@ -10,11 +10,13 @@ import { Spinner } from '../../../components/shared';
 export default function RiderDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const [rider, setRider] = useState<Record<string, unknown> | null>(null);
+  const [rider, setRider] = useState<any>(null);
   const [isOnline, setIsOnline] = useState(false);
-  const [available, setAvailable] = useState<Record<string, unknown>[]>([]);
-  const [myDeliveries, setMyDeliveries] = useState<Record<string, unknown>[]>([]);
+  const [available, setAvailable] = useState<any[]>([]);
+  const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const isApproved = Boolean(rider?.isApproved);
+  const isSuspended = Boolean(rider?.isSuspended);
 
   useEffect(() => {
     const initRider = async () => {
@@ -128,21 +130,21 @@ export default function RiderDashboard() {
           ].map((s) => (
             <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm">
               <div className={`w-9 h-9 ${s.bg} ${s.color} rounded-xl flex items-center justify-center mb-2`}>{s.icon}</div>
-              <p className="font-bold text-gray-900 text-sm">{s.value}</p>
+              <p className="font-bold text-gray-900 text-sm">{String(s.value)}</p>
               <p className="text-gray-400 text-xs">{s.label}</p>
             </div>
           ))}
         </div>
 
         {/* APPROVAL STATUS BANNER */}
-        {!rider?.isApproved && (
+        {!isApproved && (
           <div className="bg-yellow-50 rounded-2xl p-6 border border-yellow-200">
             <p className="font-semibold text-yellow-800 mb-2">⏳ Pending Approval</p>
             <p className="text-yellow-700 text-sm">Your rider profile is under review by our admin team. You'll be able to accept deliveries once approved.</p>
           </div>
         )}
 
-        {rider?.isSuspended && (
+        {isSuspended && (
           <div className="bg-red-50 rounded-2xl p-6 border border-red-200">
             <p className="font-semibold text-red-800 mb-2">❌ Account Suspended</p>
             <p className="text-red-700 text-sm">Your account has been suspended. Please contact support for more information.</p>

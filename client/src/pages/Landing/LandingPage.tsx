@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useInView } from 'framer-motion';
 import {
   MapPin, Star, Clock, Truck, Shield, ChevronRight, Phone, Mail,
-  ChefHat, Users, Package, TrendingUp, ArrowRight, CheckCircle,
+  ChefHat, Package, TrendingUp, ArrowRight, CheckCircle,
   Bike, Store, Menu, X, Instagram, Twitter, Facebook
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';

@@ -5,7 +5,7 @@ import api from '../../../services/api';
 import { Spinner } from '../../../components/shared';
 
 export default function ReviewModeration() {
-  const [reviews, setReviews] = useState<Record<string, unknown>[]>([]);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [flaggedOnly, setFlaggedOnly] = useState(false);
@@ -65,7 +65,9 @@ export default function ReviewModeration() {
                     <Star key={i} className={`w-4 h-4 ${i < (review.rating as number) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
                   ))}
                 </div>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">{(review.comment as string) || <em className="text-gray-400">No comment</em>}</p>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                  {typeof review.comment === 'string' && review.comment.trim() ? review.comment : <em className="text-gray-400">No comment</em>}
+                </p>
                 <div className="flex items-center justify-between">
                   <p className="text-gray-400 text-xs">{new Date(review.createdAt as string).toLocaleDateString()}</p>
                   <button onClick={() => handleDelete(review._id as string)} className="p-1.5 text-red-400 hover:bg-red-50 rounded-lg transition">
