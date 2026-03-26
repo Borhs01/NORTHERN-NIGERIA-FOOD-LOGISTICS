@@ -262,7 +262,7 @@ export default function LandingPage() {
               <motion.div key={city.name} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.1 }} viewport={{ once: true }}
                 className="relative rounded-3xl overflow-hidden group cursor-pointer shadow-xl" onClick={handleGetStarted}>
                 <img src={city.img} alt={city.name} className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-500" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/30 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-6">
                   <h3 className="text-white text-2xl font-bold mb-1">{city.name}</h3>
                   <p className="text-orange-300 text-sm mb-2">{city.specialty}</p>
@@ -407,7 +407,7 @@ export default function LandingPage() {
             <ul className="space-y-4">
               {['Reach thousands of hungry customers daily', 'Easy menu management with image uploads', 'Real-time order notifications', 'Transparent earnings & revenue dashboard', 'Fast onboarding — go live in 24 hours'].map((item) => (
                 <li key={item} className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                  <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
                   <span className="text-gray-700">{item}</span>
                 </li>
               ))}
@@ -419,7 +419,7 @@ export default function LandingPage() {
           <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
             className="relative rounded-3xl overflow-hidden h-80">
             <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=700&q=80" alt="Restaurant" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-orange-900/50 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-orange-900/50 to-transparent" />
             <div className="absolute bottom-6 left-6 right-6 glass rounded-2xl p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -439,7 +439,7 @@ export default function LandingPage() {
           <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
             className="relative rounded-3xl overflow-hidden h-80 lg:order-2">
             <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=700&q=80" alt="Rider" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent" />
+            <div className="absolute inset-0 bg-linear-to-t from-gray-900/60 to-transparent" />
             <div className="absolute bottom-6 left-6 right-6 glass rounded-2xl p-4">
               <p className="text-white font-bold text-sm">Daily Earnings Potential</p>
               <p className="text-orange-300 text-xl font-bold">₦8,000 – ₦15,000</p>
@@ -451,7 +451,7 @@ export default function LandingPage() {
             <ul className="space-y-4">
               {['Set your own hours — work when you want', 'Earn competitive delivery fees per order', 'Get paid quickly after each delivery', 'Be part of a growing network in Northern Nigeria', 'Simple app — no experience needed'].map((item) => (
                 <li key={item} className="flex items-start gap-3">
-                  <Bike className="w-5 h-5 text-orange-500 mt-0.5 flex-shrink-0" />
+                  <Bike className="w-5 h-5 text-orange-500 mt-0.5 shrink-0" />
                   <span className="text-gray-700">{item}</span>
                 </li>
               ))}

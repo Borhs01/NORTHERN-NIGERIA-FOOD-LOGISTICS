@@ -50,7 +50,7 @@ export default function ReviewModeration() {
               <div key={review._id as string} className={`bg-white rounded-2xl p-5 shadow-sm ${review.isFlagged ? 'border-2 border-red-200' : ''}`}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 gradient-primary rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                    <div className="w-9 h-9 gradient-primary rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
                       {(consumer?.name as string)?.[0]}
                     </div>
                     <div>
@@ -58,7 +58,7 @@ export default function ReviewModeration() {
                       <p className="text-gray-400 text-xs capitalize">{review.targetType as string} review</p>
                     </div>
                   </div>
-                  {review.isFlagged && <AlertTriangle className="w-4 h-4 text-red-500 flex-shrink-0" />}
+                  {review.isFlagged && <AlertTriangle className="w-4 h-4 text-red-500 shrink-0" />}
                 </div>
                 <div className="flex mb-2">
                   {[...Array(5)].map((_, i) => (

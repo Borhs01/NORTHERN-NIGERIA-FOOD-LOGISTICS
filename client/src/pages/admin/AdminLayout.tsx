@@ -55,7 +55,7 @@ export default function AdminLayout() {
 
       <div className="p-4 border-t border-white/10">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 gradient-primary rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+          <div className="w-9 h-9 gradient-primary rounded-full flex items-center justify-center text-white font-bold text-sm shrink-0">
             {user?.name?.[0]}
           </div>
           <div className="flex-1 min-w-0">
@@ -75,7 +75,7 @@ export default function AdminLayout() {
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
 
       {/* DESKTOP SIDEBAR */}
-      <div className="hidden lg:flex flex-col flex-shrink-0 sticky top-0 h-screen">
+      <div className="hidden lg:flex flex-col shrink-0 sticky top-0 h-screen">
         <Sidebar />
       </div>
 
