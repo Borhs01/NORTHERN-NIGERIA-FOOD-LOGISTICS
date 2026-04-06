@@ -9,9 +9,10 @@ interface AddressInputProps {
   onAddressChange: (address: Partial<DetailedAddressData>) => void;
   initialState?: string;
   initialLga?: string;
+  initialAddressData?: Partial<DetailedAddressData>;
 }
 
-export default function AddressInput({ onAddressChange, initialState = 'plateau', initialLga }: AddressInputProps) {
+export default function AddressInput({ onAddressChange, initialState = 'plateau', initialLga, initialAddressData }: AddressInputProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState<EnhancedAddressData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,6 +32,38 @@ export default function AddressInput({ onAddressChange, initialState = 'plateau'
   const [lga, setLga] = useState(initialLga || STATES[initialState as keyof typeof STATES]?.lgas[0] || '');
 
   const stateLgas = STATES[state as keyof typeof STATES]?.lgas || [];
+
+  useEffect(() => {
+    if (!initialAddressData?.fullAddress) return;
+    if (searchQuery) return;
+
+    const nextState = initialAddressData.state || initialState;
+    const nextLga = initialAddressData.lga || initialLga || STATES[nextState as keyof typeof STATES]?.lgas[0] || '';
+
+    setHouseNumber(initialAddressData.houseNumber || '');
+    setStreetName(initialAddressData.streetName || '');
+    setBuildingName(initialAddressData.buildingName || '');
+    setLandmark(initialAddressData.landmark || '');
+    setArea(initialAddressData.area || '');
+    setState(nextState);
+    setLga(nextLga);
+    setSearchQuery(initialAddressData.fullAddress);
+    setCoordinates({ lat: initialAddressData.lat || 0, lng: initialAddressData.lng || 0 });
+    setDetailedMode(true);
+
+    onAddressChange({
+      houseNumber: initialAddressData.houseNumber || '',
+      streetName: initialAddressData.streetName || '',
+      buildingName: initialAddressData.buildingName || '',
+      landmark: initialAddressData.landmark || '',
+      area: initialAddressData.area || '',
+      state: nextState,
+      lga: nextLga,
+      fullAddress: initialAddressData.fullAddress,
+      lat: initialAddressData.lat,
+      lng: initialAddressData.lng,
+    });
+  }, [initialAddressData, searchQuery, initialState, initialLga, onAddressChange]);
 
   // Search for addresses
   useEffect(() => {

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Vendor = require('../models/Vendor');
 const Rider = require('../models/Rider');
+const { geocodeAddress } = require('../utils/location');
 
 const generateTokens = (id) => {
   const token = jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '15m' });
@@ -39,12 +40,24 @@ const register = async (req, res) => {
     }
 
     try {
+      // Geocode the vendor address to get coordinates
+      let coordinates = { lat: 0, lng: 0 };
+      try {
+        const coords = await geocodeAddress(vendorAddress, state);
+        if (coords) {
+          coordinates = coords;
+        }
+      } catch (geocodeErr) {
+        console.warn('Geocoding failed, using default coordinates:', geocodeErr.message);
+      }
+
       await Vendor.create({
         userId: user._id,
         businessName: businessName || name,
         state,
         lga,
         address: vendorAddress,
+        coordinates,
       });
     } catch (vendorError) {
       // Delete user if vendor profile creation fails
@@ -84,13 +97,28 @@ const register = async (req, res) => {
       phone: user.phone,
       role: user.role,
       state: user.state,
+      profileImage: user.profileImage,
+      currentLocation: user.currentLocation,
     },
   });
 };
 
 const login = async (req, res) => {
   const { email, phone, password } = req.body;
-  const user = await User.findOne(email ? { email } : { phone });
+
+  if (!email && !phone) {
+    return res.status(400).json({ message: 'Email or phone is required' });
+  }
+
+  if (!password) {
+    return res.status(400).json({ message: 'Password is required' });
+  }
+
+  const query = {};
+  if (email) query.email = email;
+  if (phone) query.phone = phone;
+
+  const user = await User.findOne(query);
 
   if (!user || !(await user.matchPassword(password))) {
     return res.status(401).json({ message: 'Invalid credentials' });
@@ -121,6 +149,7 @@ const login = async (req, res) => {
       role: user.role,
       state: user.state,
       profileImage: user.profileImage,
+      currentLocation: user.currentLocation,
       profile,
     },
   });

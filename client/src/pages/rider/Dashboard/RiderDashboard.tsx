@@ -1,19 +1,56 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bike, DollarSign, Package, ToggleLeft, ToggleRight, LogOut, MapPin, Clock, Phone } from 'lucide-react';
+import { Bike, DollarSign, Package, ToggleLeft, ToggleRight, MapPin, Clock, Phone } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { useAuthStore } from '../../../store/authStore';
 import { formatNGN, statusColor } from '../../../utils/constants';
-import { Spinner } from '../../../components/shared';
+import { Spinner, ProfileDropdown } from '../../../components/shared';
+
+interface RiderProfile {
+  isApproved?: boolean;
+  isSuspended?: boolean;
+  totalDeliveries?: number;
+  totalEarnings?: number;
+  vehicleType?: string;
+  isOnline?: boolean;
+}
+
+interface OrderItem {
+  name: string;
+  qty: number;
+}
+
+interface VendorRef {
+  businessName?: string;
+  lga?: string;
+  state?: string;
+}
+
+interface ConsumerRef {
+  name?: string;
+  phone?: string;
+}
+
+interface DeliveryOrder {
+  _id: string;
+  vendorId?: VendorRef;
+  consumerId?: ConsumerRef;
+  items?: OrderItem[];
+  orderStatus?: string;
+  totalAmount?: number;
+  deliveryAddress?: string;
+  deliveryLga?: string;
+  state?: string;
+}
 
 export default function RiderDashboard() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const [rider, setRider] = useState<any>(null);
+  const [rider, setRider] = useState<RiderProfile | null>(null);
   const [isOnline, setIsOnline] = useState(false);
-  const [available, setAvailable] = useState<any[]>([]);
-  const [myDeliveries, setMyDeliveries] = useState<any[]>([]);
+  const [available, setAvailable] = useState<DeliveryOrder[]>([]);
+  const [myDeliveries, setMyDeliveries] = useState<DeliveryOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const isApproved = Boolean(rider?.isApproved);
   const isSuspended = Boolean(rider?.isSuspended);
@@ -24,7 +61,7 @@ export default function RiderDashboard() {
         const { data } = await api.get('/auth/me');
         setRider(data.profile);
         setIsOnline(data.profile?.isOnline || false);
-      } catch (err) {
+      } catch {
         toast.error('Failed to load rider profile');
       }
       setLoading(false);
@@ -32,26 +69,15 @@ export default function RiderDashboard() {
     initRider();
   }, []);
 
-  useEffect(() => {
-    if (isOnline) {
-      fetchAvailable();
-      fetchMyDeliveries();
-      // Refresh available deliveries every 10 seconds
-      const interval = setInterval(fetchAvailable, 10000);
-      return () => clearInterval(interval);
-    }
-  }, [isOnline]);
-
-  const fetchAvailable = async () => {
-    try { 
-      const { data } = await api.get('/orders/rider/available'); 
-      setAvailable(data); 
-    }
-    catch (err: unknown) { 
+  const fetchAvailable = useCallback(async () => {
+    try {
+      const { data } = await api.get('/orders/rider/available');
+      setAvailable(data);
+    } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string; code?: string } } };
       const errorCode = error.response?.data?.code;
       const message = error.response?.data?.message || 'Failed to load deliveries';
-      
+
       if (errorCode === 'RIDER_NOT_APPROVED') {
         toast.error('⏳ Waiting for admin approval to start accepting deliveries');
       } else if (errorCode === 'RIDER_SUSPENDED') {
@@ -60,16 +86,29 @@ export default function RiderDashboard() {
         toast.error(message);
       }
     }
-  };
+  }, []);
 
-  const fetchMyDeliveries = async () => {
+  const fetchMyDeliveries = useCallback(async () => {
     try {
       const { data } = await api.get('/orders/rider/me');
       setMyDeliveries(data);
-    } catch (err) {
-      console.error('Failed to load my deliveries:', err);
+    } catch (error) {
+      console.error('Failed to load my deliveries:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (!isOnline) return;
+
+    const loadRiderOrders = async () => {
+      await fetchAvailable();
+      await fetchMyDeliveries();
+    };
+
+    loadRiderOrders();
+    const interval = setInterval(loadRiderOrders, 10000);
+    return () => clearInterval(interval);
+  }, [isOnline, fetchAvailable, fetchMyDeliveries]);
 
   const toggleOnline = async () => {
     try {
@@ -82,7 +121,7 @@ export default function RiderDashboard() {
 
   const acceptDelivery = async (orderId: string) => {
     try {
-      await api.patch(`/orders/${orderId}/status`, { status: 'picked_up', riderId: user?._id });
+      await api.patch(`/orders/${orderId}/status`, { status: 'ready_for_pickup', riderId: user?._id });
       setAvailable((p) => p.filter((o) => o._id !== orderId));
       await fetchMyDeliveries(); // Refresh my deliveries after accepting
       toast.success('Delivery accepted!');
@@ -91,7 +130,7 @@ export default function RiderDashboard() {
 
   const markDelivered = async (orderId: string) => {
     try {
-      await api.patch(`/orders/${orderId}/status`, { status: 'delivered' });
+      await api.patch(`/orders/${orderId}/status`, { status: 'completed' });
       await fetchMyDeliveries(); // Refresh my deliveries after marking delivered
       toast.success('Delivery completed!');
     } catch { toast.error('Failed to update'); }
@@ -116,7 +155,13 @@ export default function RiderDashboard() {
             {isOnline ? <ToggleRight className="w-9 h-9 text-green-500" /> : <ToggleLeft className="w-9 h-9 text-gray-400" />}
             <span className={`text-sm font-semibold ${isOnline ? 'text-green-600' : 'text-gray-500'}`}>{isOnline ? 'Online' : 'Offline'}</span>
           </button>
-          <button onClick={() => { logout(); navigate('/'); }}><LogOut className="w-5 h-5 text-gray-400" /></button>
+          <ProfileDropdown
+            user={user}
+            onNavigate={(path) => navigate(path)}
+            onLogout={() => { logout(); navigate('/'); }}
+            supportEmail="support@northeats.com"
+            supportPhone="+234 800 000 0000"
+          />
         </div>
       </nav>
 
@@ -236,9 +281,19 @@ export default function RiderDashboard() {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-orange-500">{formatNGN(order.totalAmount as number)}</span>
-                      <button onClick={() => markDelivered(order._id as string)} className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition">
-                        Mark Delivered
-                      </button>
+                      <div className="flex gap-2">
+                        {(order.orderStatus === 'ready_for_pickup' || order.orderStatus === 'on_the_way') && (
+                          <button 
+                            onClick={() => navigate(`/rider/delivery/${order._id}`)} 
+                            className="bg-blue-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition"
+                          >
+                            Start Delivery
+                          </button>
+                        )}
+                        <button onClick={() => markDelivered(order._id as string)} className="bg-green-500 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition">
+                          Mark Delivered
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

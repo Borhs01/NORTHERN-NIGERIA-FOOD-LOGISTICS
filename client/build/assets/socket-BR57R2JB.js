@@ -1,0 +1,1 @@
+import{t as e}from"./utils-vendor-wKcdRZ_C.js";var t=e(`http://localhost:5000`,{withCredentials:!0});export{t};

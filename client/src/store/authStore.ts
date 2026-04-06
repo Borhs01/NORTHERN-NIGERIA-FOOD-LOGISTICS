@@ -17,12 +17,19 @@ interface User {
   landmark?: string;
   area?: string;
   lga?: string;
+  currentLocation?: {
+    lat: number;
+    lng: number;
+    address: string;
+    updatedAt: string;
+  };
 }
 
 interface AuthState {
   user: User | null;
   token: string | null;
   setAuth: (user: User, token: string) => void;
+  setCurrentLocation: (location: User['currentLocation']) => void;
   logout: () => void;
 }
 
@@ -34,6 +41,11 @@ export const useAuthStore = create<AuthState>()(
       setAuth: (user, token) => {
         localStorage.setItem('token', token);
         set({ user, token });
+      },
+      setCurrentLocation: (location) => {
+        set((state) => ({
+          user: state.user ? { ...state.user, currentLocation: location } : null,
+        }));
       },
       logout: () => {
         localStorage.removeItem('token');

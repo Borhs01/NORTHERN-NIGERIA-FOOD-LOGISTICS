@@ -35,7 +35,7 @@ export default function AllOrders() {
       <div className="bg-white rounded-2xl p-4 shadow-sm mb-6 flex flex-wrap gap-3">
         {[
           { key: 'state', options: [['', 'All States'], ['plateau', 'Plateau'], ['bauchi', 'Bauchi'], ['kaduna', 'Kaduna']] },
-          { key: 'status', options: [['', 'All Status'], ['pending', 'Pending'], ['confirmed', 'Confirmed'], ['preparing', 'Preparing'], ['ready', 'Ready'], ['picked_up', 'Picked Up'], ['delivered', 'Delivered'], ['cancelled', 'Cancelled']] },
+          { key: 'status', options: [['', 'All Status'], ['pending', 'Pending'], ['confirmed', 'Confirmed'], ['preparing', 'Preparing'], ['ready_for_pickup', 'Ready for Pickup'], ['on_the_way', 'On the Way'], ['arrived', 'Arrived'], ['completed', 'Completed'], ['cancelled', 'Cancelled']] },
           { key: 'paymentStatus', options: [['', 'All Payment'], ['pending', 'Unpaid'], ['paid', 'Paid'], ['refunded', 'Refunded']] },
         ].map((f) => (
           <select key={f.key} value={filters[f.key as keyof typeof filters]} onChange={(e) => setFilter(f.key, e.target.value)}

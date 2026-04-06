@@ -6,12 +6,59 @@ import api from '../../../services/api';
 import { formatNGN, statusColor } from '../../../utils/constants';
 import { Spinner } from '../../../components/shared';
 
+interface Vendor {
+  _id: string;
+  userId: string;
+  businessName: string;
+  description: string;
+  logo: string;
+  coverImage: string;
+  state: string;
+  lga: string;
+  address: string;
+  coordinates: { lat: number; lng: number };
+  categories: string[];
+  isOpen: boolean;
+  isApproved: boolean;
+  isSuspended: boolean;
+  suspendedReason: string;
+  rejectionReason: string;
+  averageRating: number;
+  totalOrders: number;
+  totalRevenue: number;
+  deliveryFee: number;
+  minOrder: number;
+  estimatedDeliveryTime: string;
+  openingHours: string;
+  phone: string;
+}
+
+interface VendorOrder {
+  _id: string;
+  consumerId: Record<string, unknown>;
+  vendorId: Record<string, unknown>;
+  orderStatus: string;
+  paymentStatus: string;
+  totalAmount: number;
+  deliveryAddress: string;
+  createdAt: string;
+}
+
+interface Review {
+  _id: string;
+  consumerId: Record<string, unknown>;
+  vendorId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
 export default function VendorDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [vendor, setVendor] = useState<any>(null);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [vendor, setVendor] = useState<Vendor | null>(null);
+  const [orders, setOrders] = useState<VendorOrder[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +75,7 @@ export default function VendorDetail() {
 
   const handleApprove = async () => {
     await api.patch(`/admin/vendors/${id}/approve`);
-    setVendor((p: any) => p ? { ...p, isApproved: true } : p);
+    setVendor((p: Vendor | null) => p ? { ...p, isApproved: true } : p);
     toast.success('Vendor approved!');
   };
 
@@ -36,13 +83,13 @@ export default function VendorDetail() {
     const reason = prompt('Reason for suspension:');
     if (reason === null) return;
     await api.patch(`/admin/vendors/${id}/suspend`, { reason });
-    setVendor((p: any) => p ? { ...p, isSuspended: true } : p);
+    setVendor((p: Vendor | null) => p ? { ...p, isSuspended: true } : p);
     toast.success('Vendor suspended');
   };
 
   const handleUnsuspend = async () => {
     await api.patch(`/admin/vendors/${id}/unsuspend`);
-    setVendor((p: any) => p ? { ...p, isSuspended: false } : p);
+    setVendor((p: Vendor | null) => p ? { ...p, isSuspended: false } : p);
     toast.success('Vendor unsuspended');
   };
 

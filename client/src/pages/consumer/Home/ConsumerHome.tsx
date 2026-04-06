@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, MapPin, ShoppingCart, Star, Clock, ChefHat, LogOut, User, ChevronDown, SlidersHorizontal, Package } from 'lucide-react';
+import { MapPin, Star, Clock, ChefHat, ChevronDown, SlidersHorizontal } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { useAuthStore } from '../../../store/authStore';
 import { useCartStore } from '../../../store/cartStore';
 import { STATES, FOOD_CATEGORIES } from '../../../utils/constants';
 import { SkeletonCard } from '../../../components/shared';
+import Navbar from '../../../components/layout/Navbar';
+import { useGeolocation, type LocationData } from '../../../hooks/useGeolocation';
 
 interface Vendor {
   _id: string;
@@ -22,12 +24,15 @@ interface Vendor {
   estimatedDeliveryTime: string;
   isOpen: boolean;
   categories: string[];
+  distanceKm?: number;
+  deliveryEstimateMinutes?: number;
 }
 
 export default function ConsumerHome() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
   const { items: cartItems } = useCartStore();
+  const { location, loading: locationLoading, error: locationError, refresh: refreshLocation, setManualLocation } = useGeolocation();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -35,22 +40,44 @@ export default function ConsumerHome() {
   const [selectedLga, setSelectedLga] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [showStateMenu, setShowStateMenu] = useState(false);
+  const [sortBy, setSortBy] = useState<'nearest' | 'rating' | 'popular'>('nearest');
   const cartCount = cartItems.reduce((acc, i) => acc + i.qty, 0);
 
   useEffect(() => {
     fetchVendors();
-  }, [selectedState, selectedLga, selectedCategory]);
+  }, [selectedState, selectedLga, selectedCategory, location, sortBy]);
 
   const fetchVendors = async () => {
     setLoading(true);
     try {
-      const params: Record<string, string> = { state: selectedState };
-      if (selectedLga) params.lga = selectedLga;
-      if (selectedCategory !== 'All') params.category = selectedCategory;
-      if (search) params.search = search;
-      const { data } = await api.get('/vendors', { params });
+      let data;
+      if (sortBy === 'nearest' && location?.lat != null && location?.lng != null) {
+        // Use nearby endpoint for nearest sorting
+        const params = { customerLat: String(location.lat), customerLng: String(location.lng) };
+        const response = await api.get('/vendors/nearby', { params });
+        data = response.data;
+      } else {
+        // Use regular endpoint with filters
+        const params: Record<string, string> = { state: selectedState };
+        if (selectedLga) params.lga = selectedLga;
+        if (selectedCategory !== 'All') params.category = selectedCategory;
+        if (search) params.search = search;
+        if (location?.lat != null && location?.lng != null) {
+          params.lat = String(location.lat);
+          params.lng = String(location.lng);
+        }
+        const response = await api.get('/vendors', { params });
+        data = response.data;
+        // Sort client-side for rating and popular
+        if (sortBy === 'rating') {
+          data.vendors.sort((a: Vendor, b: Vendor) => (b.averageRating || 0) - (a.averageRating || 0));
+        } else if (sortBy === 'popular') {
+          data.vendors.sort((a: Vendor, b: Vendor) => (b.totalOrders || 0) - (a.totalOrders || 0));
+        }
+      }
       setVendors(data.vendors);
     } catch {
+      setVendors([]);
       toast.error('Failed to load vendors');
     } finally {
       setLoading(false);
@@ -63,50 +90,40 @@ export default function ConsumerHome() {
     navigate('/');
   };
 
+  const inferStateFromLocation = (address: string) => {
+    const normalized = address.toLowerCase();
+    if (normalized.includes('plateau')) return 'plateau';
+    if (normalized.includes('bauchi')) return 'bauchi';
+    if (normalized.includes('kaduna')) return 'kaduna';
+    return null;
+  };
+
+  const onManualLocationSelect = async (selectedLocation: LocationData) => {
+    await setManualLocation(selectedLocation);
+    const state = inferStateFromLocation(selectedLocation.address);
+    if (state) setSelectedState(state);
+    setSelectedLga('');
+  };
+
   const stateLgas = STATES[selectedState as keyof typeof STATES]?.lgas || [];
 
   return (
     <div className="min-h-screen bg-gray-50">
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet" />
 
-      {/* NAVBAR */}
-      <nav className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-gray-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-4 h-16">
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 gradient-primary rounded-lg flex items-center justify-center">
-              <ChefHat className="w-5 h-5 text-white" />
-            </div>
-            <span className="heading-font text-xl font-bold text-gray-900 hidden sm:block">NorthEats</span>
-          </div>
-
-          <div className="relative flex-1 max-w-lg mx-auto">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && fetchVendors()}
-              className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 transition"
-              placeholder="Search restaurants or dishes..." />
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            <button onClick={() => navigate('/checkout')} className="relative p-2 text-gray-600 hover:text-orange-500 transition" title="Shopping Cart">
-              <ShoppingCart className="w-6 h-6" />
-              {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 gradient-primary text-white text-xs font-bold rounded-full flex items-center justify-center">{cartCount}</span>
-              )}
-            </button>
-            <button onClick={() => navigate('/orders')} className="p-2 text-gray-600 hover:text-orange-500 transition" title="My Orders">
-              <Package className="w-6 h-6" />
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 gradient-primary rounded-full flex items-center justify-center">
-                <User className="w-4 h-4 text-white" />
-              </div>
-              <span className="hidden sm:block text-sm font-medium text-gray-700">{user?.name?.split(' ')[0]}</span>
-            </div>
-            <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition"><LogOut className="w-5 h-5" /></button>
-          </div>
-        </div>
-      </nav>
+      <Navbar
+        user={user}
+        search={search}
+        setSearch={setSearch}
+        cartCount={cartCount}
+        onNavigate={(path) => navigate(path)}
+        onLogout={handleLogout}
+        location={location}
+        loading={locationLoading}
+        error={locationError}
+        onRefreshLocation={refreshLocation}
+        onManualLocationSelect={onManualLocationSelect}
+      />
 
       {/* HERO BANNER */}
       <div className="gradient-hero py-10 px-4">
@@ -155,6 +172,15 @@ export default function ConsumerHome() {
               {cat}
             </button>
           ))}
+          <div className="flex items-center gap-2 shrink-0 ml-4">
+            <span className="text-sm text-gray-600">Sort by:</span>
+            <select value={sortBy} onChange={(e) => setSortBy(e.target.value as 'nearest' | 'rating' | 'popular')}
+              className="border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white">
+              <option value="nearest">Nearest First</option>
+              <option value="rating">Rating</option>
+              <option value="popular">Popular</option>
+            </select>
+          </div>
         </div>
 
         {/* POPULAR NOW */}
@@ -226,12 +252,23 @@ export default function ConsumerHome() {
                     <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
                     <span className="text-xs font-bold text-gray-800">{v.averageRating || '4.5'}</span>
                   </div>
+                  {sortBy === 'nearest' && i < 3 && (
+                    <div className="absolute top-3 left-16 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      Nearest
+                    </div>
+                  )}
                 </div>
                 <div className="p-4">
                   <h3 className="font-bold text-gray-900 mb-1 truncate">{v.businessName}</h3>
                   <div className="flex items-center text-sm text-gray-500 gap-3">
-                    <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {v.lga}</span>
-                    <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {v.estimatedDeliveryTime}</span>
+                    {v.distanceKm != null && (
+                      <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {v.distanceKm} km away</span>
+                    )}
+                    {v.deliveryEstimateMinutes != null ? (
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {v.deliveryEstimateMinutes} min</span>
+                    ) : (
+                      <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {v.estimatedDeliveryTime}</span>
+                    )}
                   </div>
                   <div className="flex items-center justify-between mt-3">
                     <span className="text-xs text-gray-400">Delivery: <strong className="text-orange-500">₦{v.deliveryFee?.toLocaleString()}</strong></span>

@@ -7,6 +7,7 @@ import {
   Bike, Store, Menu, X, Instagram, Twitter, Facebook
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { ProfileDropdown } from '../../components/shared';
 
 const HERO_FOODS = [
   { name: 'Suya Special', price: '₦2,500', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=400&q=80', rating: 4.9 },
@@ -79,14 +80,29 @@ function AnimatedCounter({ target, suffix }: { target: number; suffix: string })
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
+
+  const handleLogout = async () => {
+    logout();
+    navigate('/');
+  };
 
   useEffect(() => {
     const t = setInterval(() => setCurrentTestimonial((p) => (p + 1) % TESTIMONIALS.length), 4000);
     return () => clearInterval(t);
   }, []);
+
+  const [backgroundDots] = useState(() => 
+    [...Array(20)].map(() => ({
+      width: Math.random() * 100 + 20,
+      height: Math.random() * 100 + 20,
+      top: `${Math.random() * 100}%`,
+      left: `${Math.random() * 100}%`,
+      opacity: Math.random() * 0.5
+    }))
+  );
 
   const handleGetStarted = () => {
     if (user) {
@@ -121,7 +137,18 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <button onClick={() => navigate('/auth')} className="text-gray-300 hover:text-white text-sm font-medium transition">Login</button>
+            {user ? (
+              <ProfileDropdown
+                user={user}
+                onNavigate={(path) => navigate(path)}
+                onLogout={handleLogout}
+                supportEmail="support@northeats.com"
+                supportPhone="+234 800 000 0000"
+                compact
+              />
+            ) : (
+              <button onClick={() => navigate('/auth')} className="text-gray-300 hover:text-white text-sm font-medium transition">Login</button>
+            )}
             <button onClick={handleGetStarted} className="gradient-primary text-white px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90 transition">
               Order Now
             </button>
@@ -136,6 +163,21 @@ export default function LandingPage() {
             {['Features', 'Cities', 'Vendors', 'Riders'].map((item) => (
               <a key={item} href={`#${item.toLowerCase()}`} className="block text-gray-300 hover:text-orange-400 py-1 text-sm">{item}</a>
             ))}
+            {user ? (
+              <>
+                <button onClick={() => navigate(user?.role === 'consumer' ? '/home' : user?.role === 'vendor' ? '/vendor/dashboard' : user?.role === 'rider' ? '/rider/dashboard' : '/admin')}
+                  className="w-full text-left px-4 py-3 rounded-xl border border-white/20 text-gray-200 font-medium hover:bg-white/10 transition">
+                  Continue as {user.name.split(' ')[0]}
+                </button>
+                <button onClick={handleLogout} className="w-full text-left px-4 py-3 rounded-xl border border-white/20 text-red-400 font-medium hover:bg-white/10 transition">
+                  Logout
+                </button>
+              </>
+            ) : (
+              <button onClick={() => navigate('/auth')} className="w-full text-left px-4 py-3 rounded-xl border border-white/20 text-gray-200 font-medium hover:bg-white/10 transition">
+                Login
+              </button>
+            )}
             <button onClick={handleGetStarted} className="w-full gradient-primary text-white py-2 rounded-xl text-sm font-semibold mt-2">
               Order Now
             </button>
@@ -146,9 +188,8 @@ export default function LandingPage() {
       {/* HERO */}
       <section className="gradient-hero min-h-screen flex items-center pt-16 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
-          {[...Array(20)].map((_, i) => (
-            <div key={i} className="absolute rounded-full bg-orange-500"
-              style={{ width: Math.random() * 100 + 20, height: Math.random() * 100 + 20, top: `${Math.random() * 100}%`, left: `${Math.random() * 100}%`, opacity: Math.random() * 0.5 }} />
+          {backgroundDots.map((style, i) => (
+            <div key={i} className="absolute rounded-full bg-orange-500" style={style} />
           ))}
         </div>
 

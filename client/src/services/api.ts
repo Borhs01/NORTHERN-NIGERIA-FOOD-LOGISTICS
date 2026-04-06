@@ -35,6 +35,17 @@ api.interceptors.response.use(
   }
 );
 
+export const userApi = {
+  saveLocation: async (payload: { lat: number; lng: number; address: string; updatedAt: string }) => {
+    const response = await api.post('/users/location', payload);
+    return response.data;
+  },
+  getLocation: async () => {
+    const response = await api.get('/users/location');
+    return response.data;
+  },
+};
+
 export default api;
 
 // Location search API functions
@@ -51,6 +62,18 @@ export const locationApi = {
   reverseGeocode: async (lat: number, lng: number) => {
     const response = await api.get('/locations/reverse', {
       params: { lat, lng }
+    });
+    return response.data;
+  },
+};
+
+export const pricingApi = {
+  // Calculate delivery fee
+  calculateDeliveryFee: async (vendorId: string, customerLat: number, customerLng: number) => {
+    const response = await api.post('/pricing/calculate-delivery-fee', {
+      vendorId,
+      customerLat,
+      customerLng,
     });
     return response.data;
   },

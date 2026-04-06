@@ -219,12 +219,28 @@ const getPayments = async (req, res) => {
     .skip((page - 1) * limit).limit(Number(limit))
     .sort({ createdAt: -1 });
 
-  const revenue = await Order.aggregate([
+  // Calculate revenue breakdown
+  const revenueBreakdown = await Order.aggregate([
     { $match: { paymentStatus: 'paid' } },
-    { $group: { _id: null, gross: { $sum: '$totalAmount' } } },
+    { 
+      $group: { 
+        _id: null, 
+        vendorRevenue: { $sum: '$subtotal' },
+        deliveryRevenue: { $sum: '$deliveryFee' },
+        grossRevenue: { $sum: '$totalAmount' }
+      } 
+    },
   ]);
 
-  res.json({ orders, total, grossRevenue: revenue[0]?.gross || 0 });
+  const breakdown = revenueBreakdown[0] || { vendorRevenue: 0, deliveryRevenue: 0, grossRevenue: 0 };
+  
+  res.json({ 
+    orders, 
+    total, 
+    grossRevenue: breakdown.grossRevenue,
+    vendorRevenue: breakdown.vendorRevenue,
+    deliveryRevenue: breakdown.deliveryRevenue
+  });
 };
 
 const exportPaymentsCSV = async (req, res) => {

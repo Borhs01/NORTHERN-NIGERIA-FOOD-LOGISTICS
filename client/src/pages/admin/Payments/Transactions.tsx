@@ -9,6 +9,8 @@ export default function Transactions() {
   const [orders, setOrders] = useState<Record<string, unknown>[]>([]);
   const [total, setTotal] = useState(0);
   const [grossRevenue, setGrossRevenue] = useState(0);
+  const [vendorRevenue, setVendorRevenue] = useState(0);
+  const [deliveryRevenue, setDeliveryRevenue] = useState(0);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ state: '', status: '', from: '', to: '', page: 1 });
 
@@ -21,6 +23,8 @@ export default function Transactions() {
       setOrders(data.orders);
       setTotal(data.total);
       setGrossRevenue(data.grossRevenue);
+      setVendorRevenue(data.vendorRevenue);
+      setDeliveryRevenue(data.deliveryRevenue);
     } catch { toast.error('Failed to load'); }
     finally { setLoading(false); }
   };
@@ -28,8 +32,13 @@ export default function Transactions() {
   const handleExport = () => { window.open('/api/admin/payments/export', '_blank'); };
   const setFilter = (k: string, v: string) => setFilters((p) => ({ ...p, [k]: v, page: 1 }));
 
-  const commission = grossRevenue * 0.1;
-  const net = grossRevenue - commission;
+  // Separate calculations for vendor and delivery revenue
+  const vendorCommission = vendorRevenue * 0.1; // 10% from vendor revenue
+  const platformDeliveryShare = deliveryRevenue * 0.2; // 20% platform cut from delivery
+  const riderDeliveryShare = deliveryRevenue * 0.8; // 80% goes to riders
+  const paystackFees = grossRevenue * 0.015;
+  const vendorPayout = (vendorRevenue - vendorCommission) * 0.985; // After Paystack
+  const platformTotal = vendorCommission + platformDeliveryShare;
 
   return (
     <div>
@@ -43,15 +52,18 @@ export default function Transactions() {
       {/* REVENUE SUMMARY */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Gross Revenue', value: formatNGN(grossRevenue), color: 'text-green-500', bg: 'bg-green-50' },
-          { label: 'Platform Commission (10%)', value: formatNGN(commission), color: 'text-blue-500', bg: 'bg-blue-50' },
-          { label: 'Paystack Fees (est. 1.5%)', value: formatNGN(grossRevenue * 0.015), color: 'text-orange-500', bg: 'bg-orange-50' },
-          { label: 'Net Payout to Vendors', value: formatNGN(net * 0.985), color: 'text-purple-500', bg: 'bg-purple-50' },
+          { label: 'Vendor Revenue', value: formatNGN(vendorRevenue), color: 'text-blue-500', bg: 'bg-blue-50', desc: 'From food sales' },
+          { label: 'Delivery Revenue', value: formatNGN(deliveryRevenue), color: 'text-green-500', bg: 'bg-green-50', desc: 'From delivery fees' },
+          { label: 'Platform Commission', value: formatNGN(platformTotal), color: 'text-purple-500', bg: 'bg-purple-50', desc: `10% vendor + 20% delivery` },
+          { label: 'Paystack Fees', value: formatNGN(paystackFees), color: 'text-orange-500', bg: 'bg-orange-50', desc: '1.5% of gross' },
+          { label: 'Vendor Payout', value: formatNGN(vendorPayout), color: 'text-green-600', bg: 'bg-green-100', desc: 'After commission & fees' },
+          { label: 'Rider Payout', value: formatNGN(riderDeliveryShare), color: 'text-cyan-500', bg: 'bg-cyan-50', desc: '80% of delivery fees' },
         ].map((s) => (
           <div key={s.label} className="bg-white rounded-2xl p-4 shadow-sm">
             <div className={`w-9 h-9 ${s.bg} ${s.color} rounded-xl flex items-center justify-center mb-2`}><DollarSign className="w-5 h-5" /></div>
             <p className="font-bold text-gray-900 text-lg">{s.value}</p>
             <p className="text-gray-400 text-xs">{s.label}</p>
+            {s.desc && <p className="text-gray-300 text-xs mt-1">{s.desc}</p>}
           </div>
         ))}
       </div>

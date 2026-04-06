@@ -1,53 +1,75 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, Trash2, ShoppingCart, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import api from '../../../services/api';
+import api, { pricingApi } from '../../../services/api';
 import { useCartStore } from '../../../store/cartStore';
 import { useAuthStore } from '../../../store/authStore';
 import { formatNGN, STATES } from '../../../utils/constants';
-import AddressInput from '../../../components/shared/AddressInput';
-import type { DetailedAddressData } from '../../../utils/geolocation';
+import { useGeolocation } from '../../../hooks/useGeolocation';
+
+interface DeliveryFeeData {
+  fee: number;
+  estimatedMinutes: number;
+  distanceKm: number;
+  breakdown: {
+    baseFare: number;
+    distanceFee: number;
+    timeFee: number;
+    surgeMultiplier: number;
+    peakMultiplier: number;
+  };
+  isPeakHour: boolean;
+}
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { items, vendorId, vendorName, total, deliveryFee, clearCart } = useCartStore();
-  const [addressData, setAddressData] = useState<Partial<DetailedAddressData>>({
-    houseNumber: user?.houseNumber || '',
-    streetName: user?.streetName || '',
-    buildingName: user?.buildingName || '',
-    landmark: user?.landmark || '',
-    area: user?.area || '',
-    state: user?.state || 'plateau',
-    lga: user?.lga || STATES['plateau'].lgas[0],
-    fullAddress: user?.address || '',
-  });
+  const { items, vendorId, vendorName, total, deliveryFee: cartDeliveryFee, clearCart } = useCartStore();
+  const { location, error: locationError, refresh: refreshLocation } = useGeolocation();
   const [loading, setLoading] = useState(false);
+  const [feeLoading, setFeeLoading] = useState(false);
+  const [feeData, setFeeData] = useState<DeliveryFeeData | null>(null);
   const subtotal = total();
+  const deliveryFee = feeData?.fee || cartDeliveryFee;
   const grandTotal = subtotal + deliveryFee;
 
+  useEffect(() => {
+    const fetchDeliveryFee = async () => {
+      if (!vendorId || !location?.lat || !location?.lng) return;
+      setFeeLoading(true);
+      try {
+        const data = await pricingApi.calculateDeliveryFee(vendorId, location.lat, location.lng);
+        setFeeData(data);
+      } catch (err: unknown) {
+        const error = err as { response?: { data?: { message?: string } } };
+        toast.error(error.response?.data?.message || 'Could not calculate delivery fee');
+        setFeeData(null);
+      } finally {
+        setFeeLoading(false);
+      }
+    };
+    fetchDeliveryFee();
+  }, [vendorId, location?.lat, location?.lng]);
+
+
   const placeOrder = async () => {
-    if (!addressData.fullAddress?.trim()) return toast.error('Please enter your delivery address');
-    if (!addressData.state || !addressData.lga) return toast.error('Please select your State and LGA');
+    if (!location?.address?.trim()) return toast.error('Please set your location on the dashboard before checking out');
     if (!items.length) return toast.error('Your cart is empty');
     setLoading(true);
     try {
+      const orderState = (location?.state || user?.state || 'plateau') as keyof typeof STATES;
       const orderPayload = {
         vendorId,
-        state: addressData.state,
-        deliveryAddress: addressData.fullAddress,
-        deliveryLga: addressData.lga,
+        state: location.state || user?.state || 'plateau',
+        deliveryAddress: location.address,
+        deliveryLga: location.lga || user?.lga || STATES[orderState].lgas[0],
         deliveryAddressDetails: {
-          houseNumber: addressData.houseNumber,
-          streetName: addressData.streetName,
-          buildingName: addressData.buildingName,
-          landmark: addressData.landmark,
-          area: addressData.area,
-          lat: addressData.lat,
-          lng: addressData.lng,
+          lat: location.lat,
+          lng: location.lng,
         },
         items: items.map((i) => ({ foodItemId: i._id, name: i.name, qty: i.qty, unitPrice: i.price, image: i.image })),
+        deliveryFee: deliveryFee, // Include the calculated delivery fee
       };
       const { data: order } = await api.post('/orders', orderPayload);
       const { data: payment } = await api.post('/payments/initiate', { orderId: order._id });
@@ -115,19 +137,82 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        {/* DELIVERY ADDRESS */}
-        <AddressInput 
-          onAddressChange={(updatedAddress) => setAddressData(updatedAddress)}
-          initialState={addressData.state}
-          initialLga={addressData.lga}
-        />
+        <div className="bg-white rounded-2xl p-6 shadow-sm">
+          <h2 className="font-bold text-gray-900 mb-4">Delivery Location</h2>
+          <div className="rounded-2xl border border-gray-200 p-4 bg-gray-50">
+            <p className="text-sm text-gray-600 mb-2">Your checkout location is taken from the app location selector.</p>
+            <p className="font-semibold text-gray-900">{location?.address || 'No location set yet. Please select your location on the dashboard.'}</p>
+            {location?.state && location?.lga && (
+              <p className="text-sm text-gray-500 mt-2">{location.lga}, {location.state}</p>
+            )}
+            {locationError && (
+              <p className="text-sm text-red-600 mt-2">{locationError}</p>
+            )}
+            {!location && (
+              <button
+                onClick={refreshLocation}
+                className="mt-4 inline-flex items-center justify-center rounded-2xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-600 transition"
+                type="button"
+              >
+                Refresh Location
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* DELIVERY FEE BREAKDOWN */}
+        {feeData && (
+          <div className={`rounded-2xl p-6 shadow-sm ${feeData.breakdown.peakMultiplier > 1 || feeData.breakdown.surgeMultiplier > 1 ? 'bg-orange-50 border border-orange-200' : 'bg-white'}`}>
+            <div className="flex items-start gap-2 mb-4">
+              <h2 className="font-bold text-gray-900 flex-1">Delivery Fee Breakdown</h2>
+              {(feeData.breakdown.peakMultiplier > 1 || feeData.breakdown.surgeMultiplier > 1) && (
+                <div className="flex items-center gap-1 text-orange-600 text-sm font-semibold">
+                  <AlertCircle className="w-4 h-4" />
+                  Surge Pricing
+                </div>
+              )}
+            </div>
+            <div className="space-y-2 text-sm mb-4">
+              <div className="flex justify-between text-gray-600">
+                <span>Base fare</span>
+                <span>{formatNGN(feeData.breakdown.baseFare)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Distance ({feeData.distanceKm} km)</span>
+                <span>{formatNGN(feeData.breakdown.distanceFee)}</span>
+              </div>
+              <div className="flex justify-between text-gray-600">
+                <span>Time ({feeData.estimatedMinutes} min)</span>
+                <span>{formatNGN(feeData.breakdown.timeFee)}</span>
+              </div>
+              {feeData.breakdown.peakMultiplier > 1 && (
+                <div className="flex justify-between text-orange-600 font-semibold">
+                  <span>Peak hours (×{feeData.breakdown.peakMultiplier})</span>
+                  <span>+{Math.round((feeData.breakdown.peakMultiplier - 1) * 100)}%</span>
+                </div>
+              )}
+              {feeData.breakdown.surgeMultiplier > 1 && (
+                <div className="flex justify-between text-orange-600 font-semibold">
+                  <span>High demand (×{feeData.breakdown.surgeMultiplier})</span>
+                  <span>+{Math.round((feeData.breakdown.surgeMultiplier - 1) * 100)}%</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* PRICE SUMMARY */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <h2 className="font-bold text-gray-900 mb-4">Payment Summary</h2>
           <div className="space-y-3">
             <div className="flex justify-between text-gray-600"><span>Subtotal</span><span className="font-medium">{formatNGN(subtotal)}</span></div>
-            <div className="flex justify-between text-gray-600"><span>Delivery Fee</span><span className="font-medium">{formatNGN(deliveryFee)}</span></div>
+            <div className="flex justify-between text-gray-600">
+              <span className="flex items-center gap-2">
+                Delivery Fee 
+                {feeLoading && <span className="text-xs text-gray-400">calculating...</span>}
+              </span>
+              <span className="font-medium">{formatNGN(deliveryFee)}</span>
+            </div>
             <div className="border-t pt-3 flex justify-between text-lg font-bold">
               <span>Total</span><span className="text-orange-500">{formatNGN(grandTotal)}</span>
             </div>

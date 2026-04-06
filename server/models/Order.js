@@ -22,10 +22,14 @@ const orderSchema = new mongoose.Schema(
     paymentStatus: { type: String, enum: ['pending', 'paid', 'failed', 'refunded'], default: 'pending' },
     orderStatus: {
       type: String,
-      enum: ['pending', 'confirmed', 'preparing', 'ready', 'picked_up', 'delivered', 'cancelled'],
+      enum: ['pending', 'confirmed', 'preparing', 'ready_for_pickup', 'on_the_way', 'arrived', 'completed', 'cancelled'],
       default: 'pending',
     },
     deliveryAddress: { type: String, required: true },
+    deliveryAddressDetails: {
+      lat: { type: Number },
+      lng: { type: Number },
+    },
     deliveryLga: { type: String, default: '' },
     state: { type: String, enum: ['plateau', 'bauchi', 'kaduna'], required: true },
     cancelReason: { type: String, default: '' },

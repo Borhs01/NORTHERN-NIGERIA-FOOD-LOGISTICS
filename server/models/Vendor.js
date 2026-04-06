@@ -11,8 +11,8 @@ const vendorSchema = new mongoose.Schema(
     lga: { type: String, required: true },
     address: { type: String, required: true },
     coordinates: {
-      lat: { type: Number, default: 0 },
-      lng: { type: Number, default: 0 },
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true },
     },
     categories: [{ type: String }],
     isOpen: { type: Boolean, default: false },
@@ -31,5 +31,7 @@ const vendorSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+vendorSchema.index({ coordinates: "2dsphere" });
 
 module.exports = mongoose.model('Vendor', vendorSchema);

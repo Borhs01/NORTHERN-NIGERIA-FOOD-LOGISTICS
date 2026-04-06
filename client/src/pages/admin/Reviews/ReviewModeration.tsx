@@ -1,19 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Star, Trash2, AlertTriangle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { Spinner } from '../../../components/shared';
 
+interface Review {
+  _id: string;
+  consumerId: { name: string; [key: string]: unknown };
+  targetType: string;
+  rating: number;
+  isFlagged: boolean;
+  [key: string]: unknown;
+}
+
 export default function ReviewModeration() {
-  const [reviews, setReviews] = useState<any[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [flaggedOnly, setFlaggedOnly] = useState(false);
   const [page, setPage] = useState(1);
 
-  useEffect(() => { fetchReviews(); }, [flaggedOnly, page]);
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get('/admin/reviews', { params: { flagged: flaggedOnly ? 'true' : undefined, page, limit: 20 } });
@@ -21,7 +28,9 @@ export default function ReviewModeration() {
       setTotal(data.total);
     } catch { toast.error('Failed to load'); }
     finally { setLoading(false); }
-  };
+  }, [flaggedOnly, page]);
+
+  useEffect(() => { fetchReviews(); }, [fetchReviews]);
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this review?')) return;

@@ -1,27 +1,32 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { io, Socket } from 'socket.io-client';
+import socket from '../../../services/socket';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { ChefHat, TrendingUp, Package, DollarSign, Star, Bell, LogOut, ChevronRight, ToggleLeft, ToggleRight } from 'lucide-react';
+import { ChefHat, TrendingUp, Package, DollarSign, Star, Bell, ChevronRight, ToggleLeft, ToggleRight } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { useAuthStore } from '../../../store/authStore';
 import { formatNGN, statusColor } from '../../../utils/constants';
-import { Spinner } from '../../../components/shared';
+import { Spinner, ProfileDropdown } from '../../../components/shared';
 
 export default function VendorDashboard() {
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
+  const { user, logout } = useAuthStore();
   const [vendor, setVendor] = useState<any>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [stats, setStats] = useState({ total: 0, today: 0, revenue: 0, rating: 0 });
   const [loading, setLoading] = useState(true);
   const [newOrders, setNewOrders] = useState<Record<string, unknown>[]>([]);
   const [isOpen, setIsOpen] = useState(false);
-  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     fetchData();
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      socket.off('new_order');
+    };
   }, []);
 
   const fetchData = async () => {
@@ -40,9 +45,6 @@ export default function VendorDashboard() {
         rating: v?.averageRating || 0,
       });
       if (v?._id) {
-        const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
-        const socket = io(socketUrl, { withCredentials: true });
-        socketRef.current = socket;
         socket.emit('join_vendor', v._id);
         socket.on('new_order', (order: Record<string, unknown>) => {
           setNewOrders((prev) => [order, ...prev]);
@@ -103,7 +105,13 @@ export default function VendorDashboard() {
               <span className="absolute -top-1 -right-1 w-4 h-4 gradient-primary text-white text-xs rounded-full flex items-center justify-center">{newOrders.length}</span>
             </div>
           )}
-          <button onClick={() => { logout(); navigate('/'); }}><LogOut className="w-5 h-5 text-gray-400 hover:text-red-500 transition" /></button>
+          <ProfileDropdown
+            user={vendor ? { name: user?.name, email: user?.email, phone: user?.phone, role: user?.role as string, state: user?.state, lga: user?.lga, address: vendor?.address as string } : null}
+            onNavigate={(path) => navigate(path)}
+            onLogout={async () => { await api.post('/auth/logout'); logout(); navigate('/'); }}
+            supportEmail="support@northeats.com"
+            supportPhone="+234 800 000 0000"
+          />
         </div>
       </nav>
 
@@ -218,7 +226,7 @@ export default function VendorDashboard() {
                           <button onClick={() => handleOrderAction(order._id as string, 'preparing')} className="text-xs gradient-primary text-white px-3 py-1 rounded-lg">Mark Preparing</button>
                         )}
                         {order.orderStatus === 'preparing' && (
-                          <button onClick={() => handleOrderAction(order._id as string, 'ready')} className="text-xs bg-blue-500 text-white px-3 py-1 rounded-lg">Mark Ready</button>
+                          <button onClick={() => handleOrderAction(order._id as string, 'ready_for_pickup')} className="text-xs bg-blue-500 text-white px-3 py-1 rounded-lg">Mark Ready</button>
                         )}
                       </td>
                     </tr>

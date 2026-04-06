@@ -11,7 +11,7 @@ const AuthPage = lazy(() => import('./pages/Auth/AuthPage'));
 const ConsumerHome = lazy(() => import('./pages/consumer/Home/ConsumerHome'));
 const VendorMenuPage = lazy(() => import('./pages/consumer/VendorPage/VendorMenuPage'));
 const CheckoutPage = lazy(() => import('./pages/consumer/Cart/CheckoutPage'));
-const OrderTrackingPage = lazy(() => import('./pages/consumer/Orders/OrderTrackingPage'));
+const OrderTrackingPage = lazy(() => import('./pages/consumer/OrderTracking/OrderTrackingPage'));
 const MyOrdersPage = lazy(() => import('./pages/consumer/Orders/MyOrdersPage'));
 
 // Vendor pages
@@ -21,6 +21,7 @@ const VendorOrdersPage = lazy(() => import('./pages/vendor/Orders/VendorOrdersPa
 
 // Rider pages
 const RiderDashboard = lazy(() => import('./pages/rider/Dashboard/RiderDashboard'));
+const ActiveDeliveryPage = lazy(() => import('./pages/rider/ActiveDelivery/ActiveDeliveryPage'));
 
 // Admin pages
 const AdminLogin = lazy(() => import('./pages/admin/AdminLogin'));
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="/vendor/orders" element={<ProtectedRoute role="vendor"><VendorOrdersPage /></ProtectedRoute>} />
 
           <Route path="/rider/dashboard" element={<ProtectedRoute role="rider"><RiderDashboard /></ProtectedRoute>} />
+          <Route path="/rider/delivery/:orderId" element={<ProtectedRoute role="rider"><ActiveDeliveryPage /></ProtectedRoute>} />
 
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<ProtectedRoute role="admin"><AdminLayout /></ProtectedRoute>}>

@@ -21,6 +21,7 @@ export const Spinner = ({ size = 'md', color = 'text-orange-500', fullPage = fal
 };
 
 export { AddressInput, AddressInputDark };
+export { default as ProfileDropdown } from './ProfileDropdown';
 
 export const SkeletonCard = () => (
   <div className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">

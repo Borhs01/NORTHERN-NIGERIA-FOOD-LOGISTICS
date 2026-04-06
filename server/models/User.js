@@ -11,6 +11,13 @@ const userSchema = new mongoose.Schema(
     state: { type: String, enum: ['plateau', 'bauchi', 'kaduna', ''], default: '' },
     lga: { type: String, default: '' },
     address: { type: String, default: '' },
+    currentLocation: {
+      lat: { type: Number },
+      lng: { type: Number },
+      address: { type: String, default: '' },
+      updatedAt: { type: Date, default: Date.now },
+      isManual: { type: Boolean, default: false },
+    },
     profileImage: { type: String, default: '' },
     isVerified: { type: Boolean, default: false },
     isActive: { type: Boolean, default: true },

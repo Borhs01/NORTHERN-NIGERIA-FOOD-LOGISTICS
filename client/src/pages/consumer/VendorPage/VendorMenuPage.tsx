@@ -103,7 +103,7 @@ export default function VendorMenuPage() {
       <div className="relative h-56 md:h-72">
         <img src={vendor.coverImage || 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=1200&q=80'}
           alt={vendor.businessName} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-black/70 to-transparent" />
         <button onClick={() => navigate('/home')} className="absolute top-4 left-4 glass p-2 rounded-xl text-white hover:bg-white/20 transition">
           <ArrowLeft className="w-5 h-5" />
         </button>
@@ -116,7 +116,7 @@ export default function VendorMenuPage() {
           </button>
         )}
         <div className="absolute bottom-0 left-0 right-0 p-4 md:p-6 flex items-end gap-4">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white shadow-lg flex-shrink-0">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white shadow-lg shrink-0">
             {vendor.logo ? <img src={vendor.logo} alt="" className="w-full h-full object-cover" /> : (
               <div className="w-full h-full gradient-primary flex items-center justify-center"><ChefHat className="w-8 h-8 text-white" /></div>
             )}
@@ -147,7 +147,7 @@ export default function VendorMenuPage() {
         <div className="flex gap-3 overflow-x-auto pb-2 mb-8 sticky top-16 bg-gray-50 py-3 z-10">
           {categories.map((cat) => (
             <button key={cat} onClick={() => setActiveCategory(cat)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition ${activeCategory === cat ? 'gradient-primary text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300'}`}>
+              className={`shrink-0 px-4 py-2 rounded-full text-sm font-medium transition ${activeCategory === cat ? 'gradient-primary text-white shadow-md' : 'bg-white text-gray-600 border border-gray-200 hover:border-orange-300'}`}>
               {cat}
             </button>
           ))}
@@ -171,7 +171,7 @@ export default function VendorMenuPage() {
                   <p className="text-gray-500 text-sm mt-1 line-clamp-2">{item.description}</p>
                   <p className="text-orange-500 font-bold text-lg mt-2">{formatNGN(item.price)}</p>
                 </div>
-                <div className="flex-shrink-0 flex flex-col items-center gap-2">
+                <div className="shrink-0 flex flex-col items-center gap-2">
                   {item.image && (
                     <img src={item.image} alt={item.name} className="w-20 h-20 rounded-xl object-cover" />
                   )}

@@ -50,7 +50,7 @@ export default function VendorOrdersPage() {
                         </>
                       )}
                       {status === 'confirmed' && <button onClick={() => updateStatus(order._id as string, 'preparing')} className="text-xs gradient-primary text-white px-3 py-1.5 rounded-lg font-semibold">Start Preparing</button>}
-                      {status === 'preparing' && <button onClick={() => updateStatus(order._id as string, 'ready')} className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg font-semibold">Mark Ready</button>}
+                      {status === 'preparing' && <button onClick={() => updateStatus(order._id as string, 'ready_for_pickup')} className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg font-semibold">Mark Ready</button>}
                     </div>
                   </div>
                 </div>

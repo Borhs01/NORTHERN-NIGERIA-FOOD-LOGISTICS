@@ -47,7 +47,7 @@ export default function PendingApprovals() {
             return (
               <div key={vendor._id as string} className="bg-white rounded-2xl p-5 shadow-sm">
                 <div className="flex items-start gap-3 mb-4">
-                  <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                  <div className="w-12 h-12 gradient-primary rounded-xl flex items-center justify-center text-white font-bold text-lg shrink-0">
                     {(vendor.businessName as string)[0]}
                   </div>
                   <div className="flex-1 min-w-0">

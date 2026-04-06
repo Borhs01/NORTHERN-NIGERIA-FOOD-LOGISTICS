@@ -6,10 +6,37 @@ import api from '../../../services/api';
 import { formatNGN, ORDER_STATUS_STEPS, statusColor } from '../../../utils/constants';
 import { Spinner } from '../../../components/shared';
 
+interface OrderItem {
+  name: string;
+  qty: number;
+  unitPrice: number;
+  image: string;
+}
+
+interface Order {
+  _id: string;
+  consumerId: Record<string, unknown>;
+  vendorId: Record<string, unknown>;
+  riderId?: Record<string, unknown> | null;
+  items: OrderItem[];
+  subtotal: number;
+  deliveryFee: number;
+  totalAmount: number;
+  paymentRef: string;
+  paymentChannel: string;
+  deliveryAddress: string;
+  deliveryLga: string;
+  state: string;
+  orderStatus: string;
+  paymentStatus: string;
+  cancelReason?: string;
+  isReviewed?: boolean;
+}
+
 export default function OrderDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,7 +48,7 @@ export default function OrderDetail() {
     const newStatus = prompt(`Set status (${statuses}, cancelled):`);
     if (!newStatus) return;
     await api.patch(`/admin/orders/${id}/status`, { status: newStatus });
-    setOrder((p: any) => p ? { ...p, orderStatus: newStatus } : p);
+    setOrder((p: Order | null) => p ? { ...p, orderStatus: newStatus } : p);
     toast.success('Status updated');
   };
 
@@ -30,7 +57,7 @@ export default function OrderDetail() {
     try {
       await api.post(`/payments/refund/${id}`);
       toast.success('Refund initiated');
-      setOrder((p: any) => p ? { ...p, paymentStatus: 'refunded', orderStatus: 'cancelled' } : p);
+      setOrder((p: Order | null) => p ? { ...p, paymentStatus: 'refunded', orderStatus: 'cancelled' } : p);
     } catch { toast.error('Refund failed'); }
   };
 
@@ -97,7 +124,7 @@ export default function OrderDetail() {
             { label: 'Vendor', data: { name: vendor?.businessName as string }, sub: vendor?.lga as string + ', ' + (vendor?.state as string) },
             ...(rider ? [{ label: 'Rider', data: rider, sub: rider?.phone as string }] : []),
           ].map((p) => {
-            const displayName = ((p.data as any)?.name as string) || 'N/A';
+            const displayName = ((p.data as Record<string, unknown>)?.name as string) || 'N/A';
             return (
               <div key={p.label} className="bg-white rounded-2xl p-4 shadow-sm">
                 <p className="text-xs text-gray-400 font-semibold uppercase mb-2">{p.label}</p>

@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Clock, Bike, Phone } from 'lucide-react';
-import { io, Socket } from 'socket.io-client';
+import socket from '../../../services/socket';
 import toast from 'react-hot-toast';
 import api from '../../../services/api';
 import { formatNGN, ORDER_STATUS_STEPS, statusColor } from '../../../utils/constants';
@@ -26,7 +26,6 @@ export default function OrderTrackingPage() {
   const navigate = useNavigate();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
     initializeOrder();
@@ -59,9 +58,6 @@ export default function OrderTrackingPage() {
       }
       
       // Setup socket connection after order is loaded
-      const socketUrl = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
-      const socket = io(socketUrl, { withCredentials: true });
-      socketRef.current = socket;
       socket.emit('join_order', id);
       socket.on('order_status_update', ({ status }: { status: string }) => {
         setOrder((prev) => prev ? { ...prev, orderStatus: status } : prev);
@@ -84,8 +80,9 @@ export default function OrderTrackingPage() {
   };
 
   useEffect(() => {
-    return () => { 
-      if (socketRef.current) socketRef.current.disconnect(); 
+    return () => {
+      socket.off('order_status_update');
+      socket.off('rider_assigned');
     };
   }, []);
 
